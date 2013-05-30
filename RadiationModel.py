@@ -71,10 +71,10 @@ def rad_model(data, tree, num_sites, dists):
                 flows[i,j] = (Mi*Nj)/((Mi + Sij)*(Mi + Nj + Sij)) #Flow calculation
     return flows
 
-#Preprocess data
+# Preprocess data
 data, tree, num_sites, dists,pos = get_data("SiteData.csv")
 
-#Run Model
+# Run Model
 flows = rad_model(data, tree, num_sites, dists)
 
 #Graph results
