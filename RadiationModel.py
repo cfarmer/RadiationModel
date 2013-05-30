@@ -72,7 +72,7 @@ def rad_model(data, tree, num_sites, dists):
     return flows
 
 #Preprocess data
-data, tree, num_sites, dists,pos = get_data("C:\Users\ImAwesome\RadiationModel\SiteData.csv")
+data, tree, num_sites, dists,pos = get_data("SiteData.csv")
 
 #Run Model
 flows = rad_model(data, tree, num_sites, dists)
