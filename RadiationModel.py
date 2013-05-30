@@ -57,7 +57,11 @@ def s(data,tree,i,j, dist):
     return s_total
 
 #Function to calculate the flow from each origin site to each destination site using radiation model
-def rad_model(data, tree, num_sites, dists):
+def rad_model(data, tree, num_sites, dists, tot_ratio=1.0):
+    # tot_ratio comes from Ti from Eqn (2) of the Radiation paper
+    # In the paper, they define Ti as equivalent to \sum_{j != i}{Tij} or more simply: 
+    # Ti = Mi * (Nc/N) where Nc is total # of 'commuters' and N is total population
+    # For our purposes, this acts like a 'scaling' factor, and can be set to 1 by default
     flows = np.zeros((num_sites,num_sites)) #Create an array to hold calculations from every site to each other site
     rows,cols = np.shape(flows)
     for i in range(rows): # Calculate each flow flows from a site to iself is always 0 -- Not sure if this is correct yet.
@@ -68,14 +72,16 @@ def rad_model(data, tree, num_sites, dists):
                 Mi = data[i,1] #Estimated area (population) of origin site
                 Nj = data[j,1] #Estimated area (population) of destination site
                 Sij = s(data, tree, i, j, dists[i,j]) #Total estimated area of all sites r distance (or less) from M; not including M or N.
-                flows[i,j] = (Mi*Nj)/((Mi + Sij)*(Mi + Nj + Sij)) #Flow calculation
+                Ti = Mi*tot_ratio
+                Tij = (Ti*Mi*Nj)/((Mi + Sij)*(Mi + Nj + Sij))
+                flows[i,j] = Tij #Flow calculation
     return flows
 
 # Preprocess data
 data, tree, num_sites, dists,pos = get_data("SiteData.csv")
 
 # Run Model
-flows = rad_model(data, tree, num_sites, dists)
+flows = rad_model(data, tree, num_sites, dists, tot_ratio=1.0)
 
 #Graph results
 print "Graphing proposed network"
@@ -84,12 +90,17 @@ G=nx.DiGraph()
 links = []
 widths = []
 rows,cols = np.shape(flows)
+out = file('flows.csv', 'w') # create output file
 for row in range(rows):
     for col in range(cols):
         if flows[row,col] > cutoff:
-            links.append([str(row),str(col), (flows[row,col]*100)])
-            widths.append(flows[row,col]*5)
+            out.write("%s\n" % flows[row, col]) # write flows to output file
+            links.append([str(row),str(col), (flows[row,col]*1.0)])
+            widths.append(flows[row,col]*0.01)
 G.add_weighted_edges_from(links)
 
 nx.draw_networkx(G, pos, width = widths)
-plt.pyplot.show()
+#plt.pyplot.show()
+plt.pyplot.savefig('flows.png')
+out.close()
+
